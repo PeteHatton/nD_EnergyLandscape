@@ -21,46 +21,53 @@ class Minimizer:
     def __init__(self,stepSize):
         pass
         
-    def step(self,coords,direction):
+    def main(self):
         pass
 
 class Steepest_Descent_fixed_step(Minimizer):
     
-    def __init__(self,stepSize):
+    def __init__(self,ax,Surf,stepSize,coords):
         self.stepSize = stepSize
-        pass
+        self.ax = ax
+        self.Surf = Surf
+        self.coords = coords
+        self.energy = self.Surf.func_eval(self.coords)
         
-    def step(self,coords,direction):
-        return coords + self.stepSize*direction
+    def main(self):
+        self.ax.scatter(self.coords[0],
+                        self.coords [1],
+                        color = 'r' ,
+                        marker='s',
+                        s=50) # initial coord plot
+                        
+        E = self.Surf.func_eval(self.coords)
+        F = self.Surf.func_prime_eval(self.coords)
+        dir = self.Surf.norm_func_prime_eval(self.coords)
+        self.coords = self.coords + self.stepSize*dir
         
+        i=0
+        while np.max(np.abs(F)) > 0.1 and i < 1000:
+            self.energy = self.Surf.func_eval(self.coords)
+            F = self.Surf.func_prime_eval(self.coords)
+            dir = self.Surf.norm_func_prime_eval(self.coords)
+            self.coords += self.stepSize*dir
+            self.ax.scatter(self.coords[0],self.coords[1], color = 'r' ,alpha=0.2)
+            i=i+1
+        
+        self.ax.scatter(self.coords[0],self.coords[1], color = 'r' , marker='*',s=50)
 
-
-
-
-    
-if __name__=='__main__':
-    
+def main():
     ax = initialPlot()
-    min = Steepest_Descent_fixed_step(0.01)
-    maxIter = 1000
+    enSurf = ls.Styblinski_Tang()
     
-    coords = [1,0] # initial coords
-    ax.scatter(coords[0],coords[1], color = 'r' , marker='s',s=50) # initial coord plot
+    initialCoords = [1,0]
     
-    #initial
-    F = ls.Styblinski_Tang().func_prime_eval(coords)
-    dir = ls.Styblinski_Tang().norm_func_prime_eval(coords)
-    coords = min.step(coords,dir) #initial step
+    min = Steepest_Descent_fixed_step(ax,enSurf,0.02,initialCoords)
+    min.main()
     
-    i=0
-    while np.max(np.abs(F)) > 0.1 and i < maxIter:
-        F = ls.Styblinski_Tang().func_prime_eval(coords)
-        dir = ls.Styblinski_Tang().norm_func_prime_eval(coords)
-        coords = min.step(coords,dir)
-        ax.scatter(coords[0],coords[1], color = 'r' ,alpha=0.2)
-        i=i+1
-    print(i)
-    ax.scatter(coords[0],coords[1], color = 'r' , marker='*',s=50)
     log('test','test')
     plt.show()
+    
+if __name__=='__main__':
+    main()
 
