@@ -1,5 +1,7 @@
 import Minimize as mn
+import sys
 
-mn.main()
+if sys.argv[1] == 'Minimize':
+    mn.main()
 
 

@@ -40,7 +40,7 @@ class Styblinski_Tang(Surface):
         
         return -1*np.asarray([ (self.func_eval([x1[2],x2[1]]) - self.func_eval([x1[0],x2[1]])) / 2*dif, (self.func_eval([x1[1],x2[2]]) - self.func_eval([x1[1],x2[0]])) / 2*dif])
 
-    def initialPlot(self):
+    def surfPlot(self):
     
         xlist = np.linspace(self.boundary[0][0], self.boundary[0][1], 500)
         ylist = np.linspace(self.boundary[1][0], self.boundary[1][1], 500)
@@ -73,7 +73,7 @@ class Muller_Brown(Surface):
             res += A[i] * np.exp( a[i]*(x1 - xo[i])**2 + b[i]*(x1 - xo[i])*(x2 - yo[i]) + c[i]*(x2 - yo[i])**2 )
         return res
         
-    def initialPlot(self):
+    def surfPlot(self):
     
         xlist = np.linspace(self.boundary[0][0], self.boundary[0][1], 400)
         ylist = np.linspace(self.boundary[1][0], self.boundary[1][1], 400)
@@ -96,7 +96,7 @@ class Egg_Holder(Surface):
         x2 = coords[1]
         return -(x2+47)*np.sin(np.sqrt(np.abs(x2+x1/2 + 47)))-x1*np.sin(np.sqrt(np.abs(x1-(x2+47))))
         
-    def initialPlot(self):
+    def surfPlot(self):
     
         xlist = np.linspace(self.boundary[0][0], self.boundary[0][1], 400)
         ylist = np.linspace(self.boundary[1][0], self.boundary[1][1], 400)
