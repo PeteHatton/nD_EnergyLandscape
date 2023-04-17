@@ -3,136 +3,127 @@ import matplotlib.pyplot as plt
 import copy
 import Landscapes as ls
 from Utilities import *
+import Lattice as lt
     
 class Minimizer:
     
     def __init__(self):
         pass
         
-    def main(self):
+    def run(self,obj):
+        self.runMain(obj)
         pass
-
+        
+    def runMain(self):
+        pass
+        
 class Steepest_Descent_fixed_step(Minimizer):
     
-    def __init__(self,ax,Surf,coords):
-        self.stepSize = 0.02
-        self.ax = ax
-        self.Surf = Surf
-        self.coords = coords
-        self.energy = self.Surf.func_eval(self.coords)
-        self.force = 0
-        self.maxIter = 1000
-        self.forceTol = 0.1
-        self.iterations = 0
-        
-    def main(self):
-        self.ax.scatter(self.coords[0],
-                        self.coords[1],
-                        color = 'r' ,
-                        marker='s',
-                        s=50) # initial coord plot
-        print(self.coords)
-        self.energy = self.Surf.func_eval(self.coords)
-        self.force = self.Surf.func_prime_eval(self.coords)
-        
-        dir = self.Surf.norm_func_prime_eval(self.coords)
-        
-        self.coords = self.coords + self.stepSize*dir
-        
-        i = self.iterations
-        
-        while np.max(np.abs(self.force)) > self.forceTol and i < self.maxIter:
-
-            self.energy = self.Surf.func_eval(self.coords)
-            self.force = self.Surf.func_prime_eval(self.coords)
-            
-            dir = self.Surf.norm_func_prime_eval(self.coords)
-            
-            self.coords += self.stepSize*dir
-            
-            if self.Surf.checkBounds(self.coords):
-                print('outside of range')
-                return 0
-                
-            self.ax.scatter(self.coords[0],self.coords[1], color = 'r' ,alpha=0.2)
-            i=i+1
-        self.iterations = i
-        
-        self.ax.scatter(self.coords[0],self.coords[1], color = 'r' , marker='*',s=50)
-
-        
-class Steepest_Descent_adaptive_step(Minimizer):
-    
-    def __init__(self,ax,Surf,coords):
+    def __init__(self):
         self.stepSize = 0.1
-        self.ax = ax
-        self.Surf = Surf
-        self.coords = coords
-        self.energy = 0
-        self.force = 0
         self.maxIter = 1000
         self.forceTol = 0.001
         self.iterations = 0
         
-    def main(self):
-        self.ax.scatter(self.coords[0],
-                        self.coords[1],
+    def runMain(self,obj):
+        obj.axis.scatter(obj.coords[0],
+                        obj.coords[1],
                         color = 'r' ,
                         marker='s',
                         s=50) # initial coord plot
                         
-        self.energy = self.Surf.func_eval(self.coords)
-        self.force = self.Surf.func_prime_eval(self.coords)
-        dir = self.Surf.norm_func_prime_eval(self.coords)
+        obj.energy = obj.surf.func_eval(obj.coords)
+        obj.force = obj.surf.func_prime_eval(obj.coords)
+        dir = obj.surf.norm_func_prime_eval(obj.coords)
         
-        self.coords = self.coords + self.stepSize*dir
+        obj.coords = obj.coords + self.stepSize*dir
         
         i = self.iterations
         
-        while np.max(np.abs(self.force)) > self.forceTol and i < self.maxIter:
+        while np.max(np.abs(obj.force)) > self.forceTol and i < self.maxIter:
 
-            self.energy = self.Surf.func_eval(self.coords)
-            self.force = self.Surf.func_prime_eval(self.coords)
+            obj.energy = obj.surf.func_eval(obj.coords)
+            obj.force = obj.surf.func_prime_eval(obj.coords)
+            
+            dir = obj.surf.norm_func_prime_eval(obj.coords)
+            
+            obj.coords += self.stepSize*dir
+            if obj.surf.checkBounds(obj.coords):
+                print('outside of range')
+                return 0
+            obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
+            
+            i=i+1
+            
+        self.iterations = i
+        
+        obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
+        return 0
+
+        
+class Steepest_Descent_adaptive_step(Minimizer):
+    
+    def __init__(self):
+        self.stepSize = 0.1
+        self.maxIter = 1000
+        self.forceTol = 0.001
+        self.iterations = 0
+        
+    def runMain(self,obj):
+        obj.axis.scatter(obj.coords[0],
+                        obj.coords[1],
+                        color = 'r' ,
+                        marker='s',
+                        s=50) # initial coord plot
+                        
+        obj.energy = obj.surf.func_eval(obj.coords)
+        obj.force = obj.surf.func_prime_eval(obj.coords)
+        dir = obj.surf.norm_func_prime_eval(obj.coords)
+        
+        obj.coords = obj.coords + self.stepSize*dir
+        
+        i = self.iterations
+        
+        while np.max(np.abs(obj.force)) > self.forceTol and i < self.maxIter:
+
+            obj.energy = obj.surf.func_eval(obj.coords)
+            obj.force = obj.surf.func_prime_eval(obj.coords)
             
             dir_old = copy.deepcopy(dir)
-            dir = self.Surf.norm_func_prime_eval(self.coords)
+            dir = obj.surf.norm_func_prime_eval(obj.coords)
             
             if np.dot(dir,dir_old) > 0:
                 self.stepSize *= 1.2
             else:
                 self.stepSize *= 0.5
             
-            self.coords += self.stepSize*dir
-            if self.Surf.checkBounds(self.coords):
+            obj.coords += self.stepSize*dir
+            if obj.surf.checkBounds(obj.coords):
                 print('outside of range')
                 return 0
-            self.ax.scatter(self.coords[0],self.coords[1], color = 'r' ,alpha=0.2)
+            obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
             
             i=i+1
             
         self.iterations = i
         
-        self.ax.scatter(self.coords[0],self.coords[1], color = 'r' , marker='*',s=50)
-    return 0
+        obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
+        return 0
 
 def main():
     
-    enSurf = ls.Styblinski_Tang()
-#    enSurf = ls.Muller_Brown()
-#    enSurf = ls.Egg_Holder()
-    ax = enSurf.initialPlot()
-    initialCoords = [1,1.5]
-    if enSurf.checkBounds(initialCoords):
-        print('outside of range')
-        return 0
-        
-    min = Steepest_Descent_adaptive_step(ax,enSurf,initialCoords)
-    _ = min.main()
+    lattice = lt.lattice()
+    lattice.pullConfig()
+    
+    min = Steepest_Descent_adaptive_step()
+    lattice.axis = lattice.surf.initialPlot()
+    
+    _ = min.run(lattice)
     
     print(min.iterations)
     log(__name__,'test')
     plt.show()
     
 if __name__=='__main__':
-    main()
+    pass
 
