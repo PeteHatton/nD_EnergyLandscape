@@ -113,19 +113,22 @@ class Steepest_Descent_adaptive_step(Minimizer):
         self.iterations = i
         
         self.ax.scatter(self.coords[0],self.coords[1], color = 'r' , marker='*',s=50)
+    return 0
 
 def main():
     
-#    enSurf = ls.Styblinski_Tang()
-    enSurf = ls.Muller_Brown()
+    enSurf = ls.Styblinski_Tang()
+#    enSurf = ls.Muller_Brown()
+#    enSurf = ls.Egg_Holder()
     ax = enSurf.initialPlot()
-    initialCoords = [0,1.5]
+    initialCoords = [1,1.5]
     if enSurf.checkBounds(initialCoords):
         print('outside of range')
         return 0
+        
     min = Steepest_Descent_adaptive_step(ax,enSurf,initialCoords)
+    _ = min.main()
     
-    min.main()
     print(min.iterations)
     log(__name__,'test')
     plt.show()

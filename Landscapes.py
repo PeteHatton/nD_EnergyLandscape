@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-"""
-make a class structure for defining each function and its deriv and eval...
-"""
+
 class Surface:
     def __init__(self):
         pass
@@ -84,6 +82,29 @@ class Muller_Brown(Surface):
         Z = self.func_eval([X,Y])
         fig,ax=plt.subplots(1,1)
         cp = ax.contourf(X, Y, Z,levels=100,vmin=-100,vmax=100)
+        fig.colorbar(cp)
+    
+        return ax
+
+class Egg_Holder(Surface):
+
+    def __init__(self):
+        self.boundary = [[-512,512],[-512,512]]
+        
+    def func_eval(self,coords):
+        x1 = coords[0]
+        x2 = coords[1]
+        return -(x2+47)*np.sin(np.sqrt(np.abs(x2+x1/2 + 47)))-x1*np.sin(np.sqrt(np.abs(x1-(x2+47))))
+        
+    def initialPlot(self):
+    
+        xlist = np.linspace(self.boundary[0][0], self.boundary[0][1], 400)
+        ylist = np.linspace(self.boundary[1][0], self.boundary[1][1], 400)
+
+        X, Y = np.meshgrid(xlist, ylist)
+        Z = self.func_eval([X,Y])
+        fig,ax=plt.subplots(1,1)
+        cp = ax.contourf(X, Y, Z,levels=100,vmin=-1000,vmax=1000)
         fig.colorbar(cp)
     
         return ax
