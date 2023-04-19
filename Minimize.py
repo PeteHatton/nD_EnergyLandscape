@@ -130,7 +130,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
         #plot minimized position
         obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
         
-        ut.log(__name__ , 'Minimization Complete, Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
+        ut.log(__name__ , 'Minimization Complete, Final Coordinates: [' + str(obj.coords[0])+','+str(obj.coords[1]) + '], Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
         
         return 0
 
