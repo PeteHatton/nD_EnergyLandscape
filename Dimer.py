@@ -22,6 +22,9 @@ class Dimer:
         self.dimerForce_2 = None
         self.transForce = None
         self.dimerEnergy = None
+        self.dTheta = None
+        self.dimerForce_perp = None
+        self.Theta = None
     
     def run(self,obj):
         
@@ -35,12 +38,13 @@ class Dimer:
         for i in range(10):
             self.calcTransForce(obj)
             self.minDimer_translate(obj)
+            self.calcRotForce(obj)
             self.minDimer_rot(obj)
             obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
             ut.log(__name__ , 'Energy: '
                             + str(round(obj.energy,5))
                             + ', Rel. En.: '
-                            + str(round(obj.energy - self.minEnergy,5))
+                            + str(round(self.minEnergy - obj.energy,5))
                             ,2)
         
         ut.log(__name__ , 'Dimer walker finished',1)
@@ -53,8 +57,8 @@ class Dimer:
         
         #create the dimer structure
         ut.log(__name__ , 'Setting up dimer structure',1)
-        self.dimerCoords_1 = self.dimerOffset * self.direction / 2
-        self.dimerCoords_2 = - self.dimerOffset * self.direction / 2
+        self.dimerCoords_1 = self.dimerOffset * self.direction
+        self.dimerCoords_2 = - self.dimerOffset * self.direction
         
         #calculate initial energy on images
         self.dimerEnergy_1 = obj.surf.func_eval(self.dimerCoords_1)
@@ -78,9 +82,9 @@ class Dimer:
         
         
     def dirRand(self):
-        vecRand = np.random.rand(1,2)[0] # i think this only return positive numbers so need to think about how to do this.
+
+        vecRand = np.random.uniform(low = -1.0, high = 1.0, size = (1,2))[0]
         self.direction = vecRand / np.linalg.norm(vecRand)
-        print(self.direction)
         
     def minDimer_translate(self,obj):
         
@@ -93,15 +97,27 @@ class Dimer:
         obj.energy = obj.surf.func_eval(obj.coords)
 
     def minDimer_rot(self,obj):
+#        self.dimerCoords_1 += ( self.direction*np.cos(self.dTheta) + self.Theta * np.sin(self.dTheta)) * self.dimerOffset
         pass
     
     def calcTransForce(self,obj):
         
+        obj.force = obj.surf.func_prime_eval(obj.coords)
+        
         cos_angle = np.dot(obj.force,self.direction) / ( np.dot(obj.force,obj.force) * np.dot(self.direction,self.direction) )
-        
-        
         self.transForce = obj.force - 2 * obj.force * cos_angle
 #        self.transForce = - self.direction #np.dot(obj.force,self.direction)
+    
+    def calcRotForce(self,obj):
+        
+        #calc force on dimer perpendicular to the direction of dimer.
+        dimerForce_perp_1 = self.dimerForce_1 - (np.dot(self.dimerForce_1,self.direction)*self.direction)
+        dimerForce_perp_2 = self.dimerForce_2 - (np.dot(self.dimerForce_2,self.direction)*self.direction)
+        self.dimerForce_perp = dimerForce_perp_1 - dimerForce_perp_2
+        
+        self.Theta = self.dimerForce_perp/np.linalg.norm(self.dimerForce_perp)
+    
+
 def main():
     ut.log(__name__ , 'Begin',0)
     
