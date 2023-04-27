@@ -1,13 +1,23 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import sys
 
 class Surface:
 
     def __init__(self):
         pass
+        
+    def checkBounds(self,initialCoords):
+        for i,_ in enumerate(initialCoords):
+            if self.boundary[i][0] > initialCoords[i] or self.boundary[i][1] < initialCoords[i]:
+                return 1
+        return 0
     
     def func_prime_eval(self,coords):
+    
+#        if self.checkBounds(coords):
+#            return 'fail'
         dif = 0.00001
         x1 = [coords[0]-dif, coords[0], coords[0]+dif]
         x2 = [coords[1]-dif, coords[1], coords[1]+dif]
@@ -18,11 +28,7 @@ class Surface:
         eval = self.func_prime_eval(coords)
         return eval/np.linalg.norm(eval)
         
-    def checkBounds(self,initialCoords):
-        for i,_ in enumerate(initialCoords):
-            if self.boundary[i][0] > initialCoords[i] or self.boundary[i][1] < initialCoords[i]:
-                return 1
-        return 0
+
 
 class Styblinski_Tang(Surface):
 

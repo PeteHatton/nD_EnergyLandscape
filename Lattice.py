@@ -18,7 +18,7 @@ class lattice:
         
         #energy and force initialization
         self.energy = 0
-        self.force = None
+        self.force = [np.inf,np.inf]
         self.normF = None
         
         #Dimension
