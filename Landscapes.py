@@ -15,9 +15,7 @@ class Surface:
         return 0
     
     def func_prime_eval(self,coords):
-    
-#        if self.checkBounds(coords):
-#            return 'fail'
+
         dif = 0.00001
         x1 = [coords[0]-dif, coords[0], coords[0]+dif]
         x2 = [coords[1]-dif, coords[1], coords[1]+dif]
@@ -27,8 +25,6 @@ class Surface:
     def norm_func_prime_eval(self,coords):
         eval = self.func_prime_eval(coords)
         return eval/np.linalg.norm(eval)
-        
-
 
 class Styblinski_Tang(Surface):
 

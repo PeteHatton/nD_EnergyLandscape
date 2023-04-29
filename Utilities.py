@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 def log(caller,message,indent=0):
 
@@ -15,3 +16,15 @@ def ORlC(filePath,popNo=0):
     return lines
     
 
+def convertStrToType(strValue, typeName):
+    try:
+        if typeName == 'str':
+            return strValue.strip()
+        elif typeName == 'int':
+            return int(strValue)
+        elif typeName == 'float':
+            return float(strValue)
+        else:
+            sys.exit(__name__ + ": convertStrToType: ERROR: undefined type: " + typeName)
+    except:
+        sys.exit(__name__ + ": convertStrToType: ERROR: cannot convert: " + strValue + " to " + typeName)

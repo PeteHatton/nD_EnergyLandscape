@@ -6,74 +6,33 @@ import sys
 import Landscapes as ls
 import Utilities as ut
 import Lattice as lt
+import Input as ip
 
-def getMinimizer(obj):
-    if obj.minAlgorithm == 'Steepest Descent':
-        return Steepest_Descent_adaptive_step()
+def getMinimizer(params):
+    if params.minAlgorithm == 'Steepest Descent':
+        return Steepest_Descent_adaptive_step(params)
 
 class Minimizer:
     
-    def __init__(self):
-        pass
+    def __init__(self,params):
+        self.params = copy.deepcopy(params)
         
     def run(self,obj):
         pass
-        
-#class Steepest_Descent_fixed_step(Minimizer):
-#
-#    def __init__(self):
-#        pass
-#
-#    def runMain(self,obj):
-#        obj.axis.scatter(obj.coords[0],
-#                        obj.coords[1],
-#                        color = 'r' ,
-#                        marker='s',
-#                        s=50) # initial coord plot
-#
-#        obj.energy = obj.surf.func_eval(obj.coords)
-#        obj.force = obj.surf.func_prime_eval(obj.coords)
-#        obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
-#
-#        obj.coords = obj.coords + obj.stepSize*obj.normF
-#
-#        i = 0
-#
-#        while np.max(np.abs(obj.force)) > obj.forceTol and i < obj.maxIter:
-#
-#            obj.energy = obj.surf.func_eval(obj.coords)
-#            obj.force = obj.surf.func_prime_eval(obj.coords)
-#
-#            obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
-#
-#            obj.coords += obj.stepSize*obj.normF
-#
-#            if obj.surf.checkBounds(obj.coords):
-#                print('outside of range')
-#                return 0
-#
-#            obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
-#
-#            i=i+1
-#
-#        obj.minIterations = i
-#
-#        obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
-#
-#        return 0
 
         
 class Steepest_Descent_adaptive_step(Minimizer):
     
-    def __init__(self):
-        pass
+    def __init__(self,params):
+        super(Steepest_Descent_adaptive_step, self).__init__(params)
         
     def run(self,obj):
-    
-        #Check if we've left the 'safe' area
-        if obj.surf.checkBounds(obj.coords):
-            print('outside of range')
-            return 1
+        
+        #pararms
+        self.stepSize = self.params.minStepSize
+        self.minForceTol = self.params.minForceTol
+        self.MaxIt = self.params.minMaxIterations
+        obj.coords
         
         # plot initial coordinate
         obj.axis.scatter(obj.coords[0],
@@ -92,9 +51,9 @@ class Steepest_Descent_adaptive_step(Minimizer):
         ut.log(__name__ , 'STEP: '+str(i)+' Energy: ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
         
         #Make steepest descent step
-        obj.coords = obj.coords + obj.stepSize*obj.normF
+        obj.coords = obj.coords + self.stepSize*obj.normF
         
-        while np.max(np.abs(obj.force)) > obj.forceTol and i < obj.maxIter:
+        while np.max(np.abs(obj.force)) > self.minForceTol and i < self.MaxIt:
             
             #increase step counter
             i+=1
@@ -109,17 +68,12 @@ class Steepest_Descent_adaptive_step(Minimizer):
             
             #Change the step size
             if np.dot(obj.normF,normF_old) > 0:
-                obj.stepSize *= 1.2
+                self.stepSize *= 1.2
             else:
-                obj.stepSize *= 0.4
+                self.stepSize *= 0.4
             
             #Make steepest descent step
-            obj.coords += obj.stepSize*obj.normF
-            
-            #Check if we've left the 'safe' area
-            if obj.surf.checkBounds(obj.coords):
-                print('outside of range')
-                return 1
+            obj.coords += self.stepSize*obj.normF
             
             #plot current position
             obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
@@ -136,12 +90,15 @@ class Steepest_Descent_adaptive_step(Minimizer):
 
 def main():
     
+    #read Params
+    minParams = ip.getParams()
+    print(minParams.initialCoords)
+    
     #Set-up configuration
-    lattice = lt.lattice()
-    lattice.pullConfig()
+    lattice = lt.lattice(minParams)
     
     ut.log(__name__, 'Initializing Minimizer')
-    min = getMinimizer(lattice)
+    min = getMinimizer(minParams)
     lattice.axis = ls.surfPlot(lattice)
     
     ut.log(__name__, 'Running '+lattice.minAlgorithm+' Minimization',1)

@@ -7,10 +7,20 @@ import math
 import Landscapes as ls
 import Utilities as ut
 import Lattice as lt
-        
+import Input as ip
+
+class saddleSearcher:
+
+    def __init__(self,params):
+        self.params = copy.deepcopy(params)
+
 class Dimer:
     
-    def __init__(self):
+    def __init__(self,params):
+        self.params = copy.deepcopy(params)
+        
+        
+    def initializeDimer(self,obj):
     
         #energy info
         self.minEnergy = 0
@@ -18,9 +28,9 @@ class Dimer:
         self.dimerEnergy = 0
         
         #dimer params
-        self.dimerOffset = 0.1
-        self.dimerStepSize = 0.001
-        self.maxIter=4000
+        self.dimerOffset = self.params.dimerOffset
+        self.dimerStepSize = self.params.dimerStepSize
+        self.maxIter = self.params.dimerMaxIter
         
         #dimer coord init
         self.dimerCoords_1 = None
@@ -42,7 +52,23 @@ class Dimer:
         # rot angle init
         self.dTheta = None
         self.Theta = None
+        self.dTheta_deriv = self.params.dTheta
         self.F_scal = 0
+        
+        obj.coords = self.params.initialCoords
+        
+        ut.log(__name__ , 'Initializing random Direction',1)
+        #normalized random direction vector
+        self.dirRand()
+        
+        ut.log(__name__ , 'Setting up Dimer structure',1)
+        
+        # step first before start the dimer to push it out of minima first
+        obj.coords += self.dimerOffset * self.direction
+        
+        # create dimer
+        self.dimerCoords_1 = obj.coords + self.dimerOffset * self.direction
+        self.dimerCoords_2 = obj.coords - self.dimerOffset * self.direction
 
     def run(self,obj):
 
@@ -86,8 +112,8 @@ class Dimer:
             obj.axis.plot([self.dimerCoords_1[0], self.dimerCoords_2[0]]
                         ,[self.dimerCoords_1[1], self.dimerCoords_2[1]]
                         ,color='orange'
-                        ,alpha=0.1)
-            obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=0.1,color='r')
+                        ,alpha=0.01)
+            obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=0.01,color='r',s=10)
             
             #increment step counter
             iter += 1
@@ -101,35 +127,19 @@ class Dimer:
             
         #final log
         if iter < self.maxIter:
-            ut.log(__name__, 'Converged! '+ str(iter) + ' steps.' + ' Energy: '
-                            + str(round(obj.energy,5))
-                            + ', Rel. En.: '
-                            + str(round(obj.energy - self.minEnergy,5)) + '. Saddle point: ' + str(obj.coords)
+            ut.log(__name__, 'Converged! '+ str(iter) + ' steps.'
+                            + ' Energy: ' + str(round(obj.energy,5))
+                            + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
+                            + '. Saddle point: ' + str(obj.coords)
                             ,1)
+            return 0
         else:
-            ut.log(__name__, 'FAILED. '+ str(iter) + ' steps.' + ' Energy: '
-                            + str(round(obj.energy,5))
-                            + ', Rel. En.: '
-                            + str(round(obj.energy - self.minEnergy,5)) + '. Final coords: ' + str(obj.coords)
+            ut.log(__name__, 'FAILED! Max Steps: '+ str(iter)
+                            +  '. Energy: ' + str(round(obj.energy,5))
+                            + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
+                            + '. Final coords: ' + str(obj.coords)
                             ,1)
-            
-        
-    def initializeDimer(self,obj):
-        
-        ut.log(__name__ , 'Initializing random Direction',1)
-        #normalized random direction vector
-        self.dirRand()
-        
-        ut.log(__name__ , 'Setting up Dimer structure',1)
-        
-        # step first before start the dimer to push it out of minima first
-        obj.coords += self.dimerOffset * self.direction
-        
-        # create dimer
-        self.dimerCoords_1 = obj.coords + self.dimerOffset * self.direction
-        self.dimerCoords_2 = obj.coords - self.dimerOffset * self.direction
-        
-        return 0
+            return 1
 
     def dirRand(self):
         
@@ -145,15 +155,18 @@ class Dimer:
         
     def minDimer_translate(self,obj):
         
-        #step center in the new direction with some step size and reinitialize dimer
+        #step center point
         obj.coords += self.dimerStepSize * self.transForce
+        
+        #reinitialize dimer structure
         self.dimerCoords_1 = obj.coords + self.dimerOffset * self.direction
         self.dimerCoords_2 = obj.coords - self.dimerOffset * self.direction
         
         return 0
 
     def minDimer_rot(self,obj):
-
+        
+        
         self.direction = ( self.direction*math.cos(self.dTheta)
                         + self.Theta * math.sin(self.dTheta))
         self.direction /= np.linalg.norm(self.direction)
@@ -165,11 +178,23 @@ class Dimer:
         return 0
 
     def calcForce(self,obj):
+    
+        mod_1 = 1
+        mod_2 = 1
         
+        # force modification based on found saddles.
+        if self.params.useDeflation and len(obj.saddlePoints)>0:
+            for i in range(len(obj.saddlePoints)):
+                mod_1 *= np.asarray( ( self.dimerCoords_1 - obj.saddlePoints[i] )**1)
+                mod_2 *= np.asarray( ( self.dimerCoords_2 - obj.saddlePoints[i] )**1)
+            
+            mod_1 = 1/mod_1 - 1
+            mod_2 = 1/mod_2 - 1
+            
         #force on state and 2 images:
-        self.dimerForce_1 = obj.surf.func_prime_eval(self.dimerCoords_1)
-        self.dimerForce_2 = obj.surf.func_prime_eval(self.dimerCoords_2)
-
+        self.dimerForce_1 =  mod_1 * obj.surf.func_prime_eval(self.dimerCoords_1)
+        self.dimerForce_2 =  mod_2 * obj.surf.func_prime_eval(self.dimerCoords_2)
+        
         #infer the force on the midpoint
         obj.force=(self.dimerForce_1 + self.dimerForce_2)/2
         
@@ -177,39 +202,47 @@ class Dimer:
         
     def calcForceTrans(self,obj):
     
-        #force parallel to dimer direction
+        #force on images parallel to dimer direction
         self.dimerPar_1 = np.dot(self.dimerForce_1,self.direction)*self.direction
         self.dimerPar_2 = np.dot(self.dimerForce_2,self.direction)*self.direction
         
+        #force on midpoint parallel to dimer
         self.dimerForce_par = (self.dimerPar_1 + self.dimerPar_2)/2
                 
+        #local curvature calc.
         self.C = np.dot(self.dimerForce_2 - self.dimerForce_1,self.direction)/(2*self.dimerOffset)
         
+        # choose translation direction
         if self.C > 0:
             self.transForce = - self.dimerForce_par
         else:
             self.transForce = obj.force - 2 * self.dimerForce_par
-
+        
+        #normalize translation direction
         self.transForce /= np.linalg.norm(self.transForce)
         
         return 0
     
     def calcForceRot(self,obj):
+    
         #calc force on dimer perpendicular to the direction of dimer.
         self.dimerForce_perp_1 = self.dimerForce_1 - (np.dot(self.dimerForce_1,self.direction)*self.direction)
         self.dimerForce_perp_2 = self.dimerForce_2 - (np.dot(self.dimerForce_2,self.direction)*self.direction)
         
+        #force perp to direction of the dimer on
         self.dimerForce_perp = self.dimerForce_perp_1 - self.dimerForce_perp_2
         
+        #normalized vector in direction perp to dimer direction
         self.Theta = self.dimerForce_perp / np.linalg.norm(self.dimerForce_perp)
         
+        #some force scaler for rotation angle
         self.F_scal = np.dot(self.dimerForce_perp ,self.Theta) / self.dimerOffset
         
     #######################################################
     #THIS IS FOR THE DERIV IN EQN 5 IN DIMER PAPER
         #Rot for deriv
-        dTheta_deriv = 0.001
-        dimerCoords_1_deriv = self.dimerCoords_1 + ( self.direction*np.cos(dTheta_deriv) + self.Theta * np.sin(dTheta_deriv)) * self.dimerOffset
+        
+        dimerCoords_1_deriv = self.dimerCoords_1 + ( self.direction*np.cos(self.dTheta_deriv) + self.Theta * np.sin(self.dTheta_deriv)) * self.dimerOffset
         
         direction_star = ( - dimerCoords_1_deriv + obj.coords ) / self.dimerOffset
         direction_star /= np.linalg.norm(direction_star)
@@ -228,7 +261,7 @@ class Dimer:
         dimerForce_perp_star = dimerForce_perp_1_star - dimerForce_perp_2_star
         Theta_star = dimerForce_perp_star / np.linalg.norm(dimerForce_perp_star)
         
-        F_prime_scaler = np.abs( (np.dot(F_dimer_star,Theta_star) - np.dot(obj.force,self.Theta)) / (2*dTheta_deriv) )
+        F_prime_scaler = np.abs( (np.dot(F_dimer_star,Theta_star) - np.dot(obj.force,self.Theta)) / (2*self.dTheta_deriv) )
         
         self.dTheta = 0.5 * math.atan(2*self.F_scal/F_prime_scaler)
         
@@ -237,17 +270,27 @@ class Dimer:
     #######################################################
         
 def main():
+
     ut.log(__name__ , 'Begin',0)
     
-    lattice = lt.lattice()
+    #read Params
+    dimerParams = ip.getParams()
     
-    lattice.pullConfig()
+    lattice = lt.lattice(dimerParams)
     
     lattice.axis = ls.surfPlot(lattice)
-    dimer = Dimer()
+    lattice.initialCoords = copy.deepcopy(lattice.coords)
     
-    dimer.run(lattice)
-
+    for _ in range(dimerParams.noDimers):
+        lattice.force = [np.inf,np.inf]
+        dimer = Dimer(dimerParams)
+        status = dimer.run(lattice)
+        
+        if status:
+            pass
+        else:
+            lattice.saddlePoints.append(lattice.coords.tolist())
+            
     # show the generated plot
     ut.log(__name__ , 'Plotting...',0)
     plt.show()
