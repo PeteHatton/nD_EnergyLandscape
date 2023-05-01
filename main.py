@@ -1,3 +1,5 @@
+#!/opt/homebrew/Caskroom/miniconda/base/bin/python3
+
 import TwoD_EL.Minimize as mn
 import TwoD_EL.Dimer as dm
 import sys
