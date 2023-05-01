@@ -1,5 +1,5 @@
-import Minimize as mn
-import Dimer as dm
+import TwoD_EL.Minimize as mn
+import TwoD_EL.Dimer as dm
 import sys
 
 if sys.argv[1] == 'Minimize':

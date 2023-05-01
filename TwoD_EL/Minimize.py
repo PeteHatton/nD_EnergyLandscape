@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import copy
 import sys
 
-import Landscapes as ls
-import Utilities as ut
-import Lattice as lt
-import Input as ip
+import TwoD_EL.Landscapes as ls
+import TwoD_EL.Utilities as ut
+import TwoD_EL.Lattice as lt
+import TwoD_EL.Input as ip
 
 def getMinimizer(params):
     if params.minAlgorithm == 'Steepest Descent':
