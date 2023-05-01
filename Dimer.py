@@ -31,6 +31,7 @@ class Dimer:
         self.dimerOffset = self.params.dimerOffset
         self.dimerStepSize = self.params.dimerStepSize
         self.maxIter = self.params.dimerMaxIter
+        self.dimerTol = self.params.dimerForceTol
         
         #dimer coord init
         self.dimerCoords_1 = None
@@ -92,7 +93,7 @@ class Dimer:
         #initialize step counter
         iter = 0
         
-        while np.max(np.abs(obj.force))>0.1 and iter<self.maxIter: #and self.flag == 0
+        while np.max(np.abs(obj.force))>self.dimerTol and iter<self.maxIter: #and self.flag == 0
             
             #calc forces on dimer images
             self.calcForce(obj)
@@ -104,38 +105,41 @@ class Dimer:
             #calc forces for translation and translate
             self.calcForceTrans(obj)
             self.minDimer_translate(obj)
+            self.calcStepSize(obj)
             
             #calc new energy
             obj.energy = obj.surf.func_eval(obj.coords)
             
             #plot new position and dimer.
-            obj.axis.plot([self.dimerCoords_1[0], self.dimerCoords_2[0]]
-                        ,[self.dimerCoords_1[1], self.dimerCoords_2[1]]
-                        ,color='orange'
-                        ,alpha=0.01)
+#            obj.axis.plot([self.dimerCoords_1[0], self.dimerCoords_2[0]]
+#                        ,[self.dimerCoords_1[1], self.dimerCoords_2[1]]
+#                        ,color='orange'
+#                        ,alpha=0.01)
             obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=0.01,color='r',s=10)
             
             #increment step counter
             iter += 1
             
             #step log
-            ut.log(__name__ ,'Step: ' + str(iter) + ' Energy: '
-                            + str(round(obj.energy,5))
-                            + ', Rel. En.: '
-                            + str(round(obj.energy - self.minEnergy,5))
-                            ,2)
+            if self.params.printSteps:
+                ut.log(__name__ ,'Step: ' + str(iter) + ' E = '
+                                + str(round(obj.energy,5))
+                                + ', Rel. En.: '
+                                + str(round(obj.energy - self.minEnergy,5))
+                                ,2)
             
         #final log
         if iter < self.maxIter:
-            ut.log(__name__, 'Converged! '+ str(iter) + ' steps.'
-                            + ' Energy: ' + str(round(obj.energy,5))
+            ut.log(__name__, 'CONVERGED! '+ str(iter) + ' steps.'
+                            + ' E = ' + str(round(obj.energy,5))
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
                             + '. Saddle point: ' + str(obj.coords)
                             ,1)
+            obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=1,color='r',s=30,marker='*')
             return 0
         else:
             ut.log(__name__, 'FAILED! Max Steps: '+ str(iter)
-                            +  '. Energy: ' + str(round(obj.energy,5))
+                            +  '. E = ' + str(round(obj.energy,5))
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
                             + '. Final coords: ' + str(obj.coords)
                             ,1)
@@ -166,7 +170,6 @@ class Dimer:
 
     def minDimer_rot(self,obj):
         
-        
         self.direction = ( self.direction*math.cos(self.dTheta)
                         + self.Theta * math.sin(self.dTheta))
         self.direction /= np.linalg.norm(self.direction)
@@ -178,27 +181,54 @@ class Dimer:
         return 0
 
     def calcForce(self,obj):
-    
-        mod_1 = 1
-        mod_2 = 1
+        mod_1=1
+        mod_2=1
+        if self.params.useDeflation and not self.params.useLocalDeflationOperator:
         
-        # force modification based on found saddles.
-        if self.params.useDeflation and len(obj.saddlePoints)>0:
-            for i in range(len(obj.saddlePoints)):
-                mod_1 *= np.asarray( ( self.dimerCoords_1 - obj.saddlePoints[i] )**1)
-                mod_2 *= np.asarray( ( self.dimerCoords_2 - obj.saddlePoints[i] )**1)
+            mod_1 = self.globalDeflationOp(obj,self.dimerCoords_1)
+            mod_2 = self.globalDeflationOp(obj,self.dimerCoords_2)
+            mod_R = self.globalDeflationOp(obj,obj.coords)
             
-            mod_1 = 1/mod_1 - 1
-            mod_2 = 1/mod_2 - 1
+        elif self.params.useDeflation and self.params.useLocalDeflationOperator:
+
+            mod_1 = self.localDeflationOp(obj,self.dimerCoords_1)
+            mod_2 = self.localDeflationOp(obj,self.dimerCoords_2)
             
-        #force on state and 2 images:
+        #force on 2 images:
         self.dimerForce_1 =  mod_1 * obj.surf.func_prime_eval(self.dimerCoords_1)
         self.dimerForce_2 =  mod_2 * obj.surf.func_prime_eval(self.dimerCoords_2)
-        
+
         #infer the force on the midpoint
         obj.force=(self.dimerForce_1 + self.dimerForce_2)/2
         
         return 0
+        
+    def globalDeflationOp(self,obj,coords):
+        
+        mod=1
+        for i in range(len(obj.saddlePoints)):
+            mod *= 1/(coords - obj.saddlePoints[i])**4 + 1
+
+        return mod
+        
+    def localDeflationOp(self,obj,coords):
+    
+        alpha = self.params.LocalDeflationOperator_alpha
+        r = self.params.LocalDeflationOperator_r
+        p = self.params.LocalDeflationOperator_power
+    
+        mod=1
+        for i in range(len(obj.saddlePoints)):
+            b = 1
+            for j in range(self.params.Dimension):
+                if coords[j] < obj.saddlePoints[i][j] + r and coords[j] > obj.saddlePoints[i][j] - r:
+                    b *= np.exp( -alpha / ( r**p - ( coords[j] - obj.saddlePoints[i][j])**p )) / np.exp( -alpha / ( r**p ) )
+                else:
+                    b *= 0
+            
+            mod *= 1/(1 - b)
+        
+        return mod
         
     def calcForceTrans(self,obj):
     
@@ -268,6 +298,45 @@ class Dimer:
         return 0
         
     #######################################################
+    
+    def calcStepSize(self,obj):
+        if self.params.dimerVarStepSize == 1:
+            """
+            Linear scaling according to the curvature
+            
+            """
+
+            step = self.dTheta_deriv
+            max = 0.001
+            min = 0.00001
+            
+            self.dimerStepSize = step * self.C / 2.0
+            
+            if self.dimerStepSize > max:
+                self.dimerStepSize = max
+            elif self.dimerStepSize < min:
+                self.dimerStepSize = min
+                
+        elif self.params.dimerVarStepSize == 2:
+            """
+            exp scaling according to the curvature
+            
+            """
+
+            step = self.dTheta_deriv
+            max = 0.001
+            min = 0.00001
+            
+            self.dimerStepSize = step * np.exp(self.C) / 2.0
+            
+            if self.dimerStepSize > max:
+                self.dimerStepSize = max
+            elif self.dimerStepSize < min:
+                self.dimerStepSize = min
+            
+        
+        return 0
+        
         
 def main():
 

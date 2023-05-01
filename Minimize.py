@@ -32,7 +32,6 @@ class Steepest_Descent_adaptive_step(Minimizer):
         self.stepSize = self.params.minStepSize
         self.minForceTol = self.params.minForceTol
         self.MaxIt = self.params.minMaxIterations
-        obj.coords
         
         # plot initial coordinate
         obj.axis.scatter(obj.coords[0],
@@ -48,7 +47,8 @@ class Steepest_Descent_adaptive_step(Minimizer):
         obj.energy = obj.surf.func_eval(obj.coords)
         obj.force = obj.surf.func_prime_eval(obj.coords)
         obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
-        ut.log(__name__ , 'STEP: '+str(i)+' Energy: ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
+        
+        ut.log(__name__ , 'STEP: '+str(i)+' E = ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
         
         #Make steepest descent step
         obj.coords = obj.coords + self.stepSize*obj.normF
@@ -64,7 +64,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
             normF_old = copy.deepcopy(obj.normF)
             obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
             
-            ut.log(__name__ , 'STEP: '+str(i)+' Energy: ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),2)
+            ut.log(__name__ , 'STEP: '+str(i)+'. E = ' +str(round(obj.energy,3))+ ', max(F) = '+str(round(np.max(np.abs(obj.force)),5)),2)
             
             #Change the step size
             if np.dot(obj.normF,normF_old) > 0:
@@ -92,7 +92,6 @@ def main():
     
     #read Params
     minParams = ip.getParams()
-    print(minParams.initialCoords)
     
     #Set-up configuration
     lattice = lt.lattice(minParams)
@@ -101,7 +100,7 @@ def main():
     min = getMinimizer(minParams)
     lattice.axis = ls.surfPlot(lattice)
     
-    ut.log(__name__, 'Running '+lattice.minAlgorithm+' Minimization',1)
+    ut.log(__name__, 'Running '+ minParams.minAlgorithm +' Minimization',1)
     if min.run(lattice):
         sys.exit()
     

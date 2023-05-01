@@ -5,6 +5,11 @@ import sys
 
 class Surface:
 
+    '''
+    Generic surface object
+    
+    '''
+
     def __init__(self):
         pass
         
@@ -29,6 +34,11 @@ class Surface:
 class Styblinski_Tang(Surface):
 
     def __init__(self):
+    
+        '''
+        Suggested values for the Styblinski Tang surface [https://www.sfu.ca/~ssurjano/stybtang.html].
+        
+        '''
         self.boundary = [[-5,5],[-5,5]]
         self.vmax = 100
         self.vmin = -100
@@ -38,11 +48,29 @@ class Styblinski_Tang(Surface):
     def func_eval(self,coords):
         [x1,x2] = coords
         return 0.5 * (( x1**4 - 16*x1**2 + 5*x1 ) + ( x2**4 - 16*x2**2 + 5*x2 ) )
+        
+class Schwefel(Surface):
+
+    def __init__(self):
+    
+        self.boundary = [[-100,100],[-100,100]]
+        self.vmax = 10
+        self.vmin = -10
+        self.levels = 10
+        self.plotPoints = 100
+        
+    def func_eval(self,coords):
+        [x1,x2] = coords
+        return -418.9829*2 + x1*np.sin(np.sqrt(np.abs(x1))) + x2*np.sin(np.sqrt(np.abs(x2)))
 
 
 class Muller_Brown(Surface):
 
     def __init__(self):
+        '''
+        Suggested values for the Muller Brown surface [https://www.wolframcloud.com/objects/demonstrations/TrajectoriesOnTheMullerBrownPotentialEnergySurface-source.nb].
+        
+        '''
         self.boundary = [[-2,1],[-0.5,2]]
         self.vmax = 100
         self.vmin = -100
@@ -66,6 +94,12 @@ class Muller_Brown(Surface):
 class Egg_Holder(Surface):
 
     def __init__(self):
+    
+        '''
+        Suggested values for the Egg Holder surface [https://www.sfu.ca/~ssurjano/egg.html].
+        
+        '''
+        
         self.boundary = [[-512,512],[-512,512]]
         self.vmax = 1000
         self.vmin = -1000
@@ -77,7 +111,10 @@ class Egg_Holder(Surface):
         return -(x2+47)*np.sin(np.sqrt(np.abs(x2+x1/2 + 47)))-x1*np.sin(np.sqrt(np.abs(x1-(x2+47))))
         
 def surfPlot(obj):
-
+    '''
+    initial plot of the energy surface on the region.
+    
+    '''
     xlist = np.linspace(obj.surf.boundary[0][0], obj.surf.boundary[0][1], obj.surf.plotPoints)
     ylist = np.linspace(obj.surf.boundary[1][0], obj.surf.boundary[1][1], obj.surf.plotPoints)
 

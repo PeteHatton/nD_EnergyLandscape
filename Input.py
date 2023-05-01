@@ -22,12 +22,21 @@ class InputParams():
         self.minStepSize = 0.0
         
         #Dimer
+        self.printSteps = 0
         self.dimerStepSize = 0.0
         self.dimerOffset = 0.0
+        self.dimerVarStepSize = 0
         self.dimerMaxIter = 0
         self.dTheta = 0.0
         self.noDimers = 0
         self.useDeflation = 0
+        self.useLocalDeflationOperator = 0
+        self.LocalDeflationOperator_alpha = 0.0
+        self.LocalDeflationOperator_r = 0.0
+        self.LocalDeflationOperator_power=0
+        
+        self.dimerForceTol = 0.0
+        
         
 def createInputObject():
     return InputParams()
