@@ -99,7 +99,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
             obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
         
         # record number of steps we took
-        obj.minIterations = i
+        obj.minIterations = iter
         
         #plot minimized position
         obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
