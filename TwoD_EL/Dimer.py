@@ -101,10 +101,22 @@ class Dimer:
             #calc forces for rotation and rotate dimer
             self.calcForceRot(obj)
             self.minDimer_rot(obj)
+                
             
             #calc forces for translation and translate
             self.calcForceTrans(obj)
             self.minDimer_translate(obj)
+            
+            #Check if we've left the bounds of the surface.
+            status = obj.surf.checkBounds(obj.coords)
+            if status:
+                ut.log(__name__, 'FAILED! OoB! Steps: '+ str(iter)
+                                +  '. E = ' + str(round(obj.energy,5))
+                                + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
+                                + '. Final coords: ' + str(obj.coords)
+                                ,1)
+                return 1
+                
             self.calcStepSize(obj)
             
             #calc new energy
@@ -129,7 +141,7 @@ class Dimer:
                                 ,2)
             
         #final log
-        if iter < self.maxIter:
+        if iter < self.maxIter and status==0:
             ut.log(__name__, 'CONVERGED! '+ str(iter) + ' steps.'
                             + ' E = ' + str(round(obj.energy,5))
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))

@@ -41,22 +41,32 @@ class Steepest_Descent_adaptive_step(Minimizer):
                         s=50)
                         
         #initialize step counter
-        i = 0
+        iter = 0
         
         #Energy and force calculations
         obj.energy = obj.surf.func_eval(obj.coords)
         obj.force = obj.surf.func_prime_eval(obj.coords)
         obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
         
-        ut.log(__name__ , 'STEP: '+str(i)+' E = ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
+        ut.log(__name__ , 'STEP: '+str(iter)+' E = ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
         
         #Make steepest descent step
         obj.coords = obj.coords + self.stepSize*obj.normF
         
+        #Check if we've left the bounds of the surface.
+        status = obj.surf.checkBounds(obj.coords)
+
+        if status:
+            ut.log(__name__, 'MINIMIZATION FAILED! OoB! Steps: '+ str(iter)
+                            +  '. E = ' + str(round(obj.energy,5))
+                            + '. Final coords: ' + str(obj.coords)
+                            ,1)
+            return 1
+        
         while np.max(np.abs(obj.force)) > self.minForceTol and i < self.MaxIt:
             
             #increase step counter
-            i+=1
+            iter+=1
             
             #Energy and force calculations
             obj.energy = obj.surf.func_eval(obj.coords)
@@ -64,7 +74,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
             normF_old = copy.deepcopy(obj.normF)
             obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
             
-            ut.log(__name__ , 'STEP: '+str(i)+'. E = ' +str(round(obj.energy,3))+ ', max(F) = '+str(round(np.max(np.abs(obj.force)),5)),2)
+            ut.log(__name__ , 'STEP: '+str(iter)+'. E = ' +str(round(obj.energy,3))+ ', max(F) = '+str(round(np.max(np.abs(obj.force)),5)),2)
             
             #Change the step size
             if np.dot(obj.normF,normF_old) > 0:
@@ -74,6 +84,16 @@ class Steepest_Descent_adaptive_step(Minimizer):
             
             #Make steepest descent step
             obj.coords += self.stepSize*obj.normF
+            
+            #Check if we've left the bounds of the surface.
+            status = obj.surf.checkBounds(obj.coords)
+            print(status)
+            if status:
+                ut.log(__name__, 'FAILED! OoB! Steps: '+ str(iter)
+                                +  '. E = ' + str(round(obj.energy,5))
+                                + '. Final coords: ' + str(obj.coords)
+                                ,1)
+                return 1
             
             #plot current position
             obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)

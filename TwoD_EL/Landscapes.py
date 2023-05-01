@@ -13,9 +13,9 @@ class Surface:
     def __init__(self):
         pass
         
-    def checkBounds(self,initialCoords):
-        for i,_ in enumerate(initialCoords):
-            if self.boundary[i][0] > initialCoords[i] or self.boundary[i][1] < initialCoords[i]:
+    def checkBounds(self,coords):
+        for i,_ in enumerate(coords):
+            if self.boundary[i][0] > coords[i] or self.boundary[i][1] < coords[i]:
                 return 1
         return 0
     
