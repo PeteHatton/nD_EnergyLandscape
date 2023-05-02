@@ -120,6 +120,8 @@ class Dimer:
             #Check if we've left the bounds of the surface.
             status = obj.surf.checkBounds(obj.coords)
             if status:
+                obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=1,color='r',s=20)
+
                 ut.log(__name__, 'FAILED! OoB! Steps: '+ str(iter)
                                 +  '. E = ' + str(round(obj.energy,5))
                                 + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))

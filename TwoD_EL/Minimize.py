@@ -33,12 +33,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
         self.minForceTol = self.params.minForceTol
         self.MaxIt = self.params.minMaxIterations
         
-        # plot initial coordinate
-        obj.axis.scatter(obj.coords[0],
-                        obj.coords[1],
-                        color = 'r' ,
-                        marker='s',
-                        s=50)
+
                         
         #initialize step counter
         iter = 0
@@ -49,6 +44,12 @@ class Steepest_Descent_adaptive_step(Minimizer):
         obj.normF = obj.surf.norm_func_prime_eval(obj.coords)
         
         ut.log(__name__ , 'STEP: '+str(iter)+' E = ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
+
+        # plot initial coordinate
+        obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy,
+                        color = 'r' ,
+                        marker='s',
+                        s=50)
         
         #Make steepest descent step
         obj.coords = obj.coords + self.stepSize*obj.normF
@@ -63,10 +64,13 @@ class Steepest_Descent_adaptive_step(Minimizer):
                             ,1)
             return 1
         
-        while np.max(np.abs(obj.force)) > self.minForceTol and i < self.MaxIt:
+        while np.max(np.abs(obj.force)) > self.minForceTol and iter < self.MaxIt:
             
             #increase step counter
             iter+=1
+
+            #plot current position
+            obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,color = 'r' ,alpha=0.2)
             
             #Energy and force calculations
             obj.energy = obj.surf.func_eval(obj.coords)
@@ -95,14 +99,12 @@ class Steepest_Descent_adaptive_step(Minimizer):
                                 ,1)
                 return 1
             
-            #plot current position
-            obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' ,alpha=0.2)
-        
+            
         # record number of steps we took
         obj.minIterations = iter
         
         #plot minimized position
-        obj.axis.scatter(obj.coords[0],obj.coords[1], color = 'r' , marker='*',s=50)
+        obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy, color = 'r' , marker='*',s=50)
         
         ut.log(__name__ , 'Minimization Complete, Final Coordinates: [' + str(obj.coords[0])+','+str(obj.coords[1]) + '], Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
         
@@ -118,7 +120,9 @@ def main():
     
     ut.log(__name__, 'Initializing Minimizer')
     min = getMinimizer(minParams)
-    lattice.axis = ls.surfPlot(lattice)
+    
+    if minParams.plotSurface and minParams.Dimension == 2:
+        lattice.axis = lattice.surf.surfPlot(lattice)
     
     ut.log(__name__, 'Running '+ minParams.minAlgorithm +' Minimization',1)
     if min.run(lattice):

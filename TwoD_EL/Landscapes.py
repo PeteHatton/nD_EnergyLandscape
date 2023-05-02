@@ -55,7 +55,7 @@ class Surface:
         Z = obj.surf.func_eval([X,Y])
 
         # Plot the surface.
-        ax.contour3D(X, Y, Z,70)
+        ax.contour3D(X, Y, Z,70,alpha=0.7)
 
         return ax
 
