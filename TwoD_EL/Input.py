@@ -14,6 +14,7 @@ class InputParams():
         self.initialyCoord = 0.0
         self.Surface = ''
         self.Dimension = 0
+        self.plotSurface = 0
         
         #Minimization
         self.minAlgorithm = ''
@@ -23,6 +24,7 @@ class InputParams():
         
         #Dimer
         self.printSteps = 0
+        self.plotSteps = 0
         self.dimerStepSize = 0.0
         self.dimerOffset = 0.0
         self.dimerVarStepSize = 0

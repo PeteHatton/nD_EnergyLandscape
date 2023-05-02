@@ -12,10 +12,17 @@ import TwoD_EL.Input as ip
 class saddleSearcher:
 
     def __init__(self,params):
-        self.params = copy.deepcopy(params)
+        pass
 
 class Dimer:
     
+    """
+    To-Do:
+        - option to just have arrow between start and stop.
+        - better adaptive step size calc
+
+    """
+
     def __init__(self,params):
         self.params = copy.deepcopy(params)
         
@@ -77,17 +84,20 @@ class Dimer:
         ut.log(__name__ , 'Initializing Dimer',1)
         self.initializeDimer(obj)
         
-        #plot the initial position and dimer
-        obj.axis.plot([self.dimerCoords_1[0],self.dimerCoords_2[0]]
-                    ,[self.dimerCoords_1[1],self.dimerCoords_2[1]]
-                    ,color='orange'
-                    ,alpha=0.5)
-        obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=1,marker='s',s=30,color='r')
+        # #plot the initial dimer
+        # obj.axis.plot([self.dimerCoords_1[0],self.dimerCoords_2[0]]
+        #             ,[self.dimerCoords_1[1],self.dimerCoords_2[1]]
+        #             ,color='orange'
+        #             ,alpha=0.5)
+        
         
         # calculate and save inital energy
         obj.energy = obj.surf.func_eval(obj.coords)
         self.minEnergy = copy.deepcopy(obj.energy)
         
+        if self.params.plotSurface:
+            obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=1,marker='s',s=50,color='r')
+
         ut.log(__name__ , 'Walking the dimer',1)
         
         #initialize step counter
@@ -127,7 +137,8 @@ class Dimer:
 #                        ,[self.dimerCoords_1[1], self.dimerCoords_2[1]]
 #                        ,color='orange'
 #                        ,alpha=0.01)
-            obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=0.01,color='r',s=10)
+            if self.params.plotSteps and self.params.plotSurface:
+                obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=0.01,color='r',s=10)
             
             #increment step counter
             iter += 1
@@ -147,7 +158,9 @@ class Dimer:
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
                             + '. Saddle point: ' + str(obj.coords)
                             ,1)
-            obj.axis.scatter(obj.coords[0],obj.coords[1] ,alpha=1,color='r',s=30,marker='*')
+            if self.params.plotSurface:
+                obj.axis.scatter(obj.coords[0],obj.coords[1] ,obj.energy ,alpha=1,color='r',s=100,marker='*')
+
             return 0
         else:
             ut.log(__name__, 'FAILED! Max Steps: '+ str(iter)
@@ -359,7 +372,8 @@ def main():
     
     lattice = lt.lattice(dimerParams)
     
-    lattice.axis = ls.surfPlot(lattice)
+    if dimerParams.plotSurface and dimerParams.Dimension == 2:
+        lattice.axis = lattice.surf.surfPlot(lattice)
     lattice.initialCoords = copy.deepcopy(lattice.coords)
     
     for _ in range(dimerParams.noDimers):
