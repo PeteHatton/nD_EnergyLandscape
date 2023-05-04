@@ -10,8 +10,9 @@ class InputParams():
         self.InputFile = ''
         
         #Main
-        self.initialxCoord = 0.0
-        self.initialyCoord = 0.0
+        # self.initialxCoord = 0.0
+        # self.initialyCoord = 0.0
+        self.initialCoords = [0.0,0.0]
         self.Surface = ''
         self.Dimension = 0
         self.plotSurface = 0
@@ -36,7 +37,7 @@ class InputParams():
         self.LocalDeflationOperator_alpha = 0.0
         self.LocalDeflationOperator_r = 0.0
         self.LocalDeflationOperator_power=0
-        
+        self.uniqueSaddleCutoff = 0.0
         self.dimerForceTol = 0.0
         
         
@@ -105,7 +106,7 @@ def getParams(sectionName="", inputParamFile="config.cfg"):
     
     f.close()
     
-    inputParamObject.initialCoords =[ inputParamObject.initialxCoord,  inputParamObject.initialyCoord ]
+    #inputParamObject.initialCoords =[ inputParamObject.initialxCoord,  inputParamObject.initialyCoord ]
     
     InputParams.InputFile = inputParamFile
     

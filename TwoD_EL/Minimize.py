@@ -46,10 +46,12 @@ class Steepest_Descent_adaptive_step(Minimizer):
         ut.log(__name__ , 'STEP: '+str(iter)+' E = ' +str(round(obj.energy,3))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),3)),2)
 
         # plot initial coordinate
-        obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy,
-                        color = 'r' ,
-                        marker='s',
-                        s=50)
+        if self.params.Dimension==2:
+
+            obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy,
+                            color = 'r' ,
+                            marker='s',
+                            s=50)
         
         #Make steepest descent step
         obj.coords = obj.coords + self.stepSize*obj.normF
@@ -70,7 +72,8 @@ class Steepest_Descent_adaptive_step(Minimizer):
             iter+=1
 
             #plot current position
-            obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,color = 'r' ,alpha=0.2)
+            if self.params.Dimension == 2 and self.params.plotSurface:
+                obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,color = 'r' ,alpha=0.2)
             
             #Energy and force calculations
             obj.energy = obj.surf.func_eval(obj.coords)
@@ -104,9 +107,10 @@ class Steepest_Descent_adaptive_step(Minimizer):
         obj.minIterations = iter
         
         #plot minimized position
-        obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy, color = 'r' , marker='*',s=50)
+        if self.params.Dimension==2:
+            obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy, color = 'r' , marker='*',s=50)
         
-        ut.log(__name__ , 'Minimization Complete, Final Coordinates: [' + str(obj.coords[0])+','+str(obj.coords[1]) + '], Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
+        ut.log(__name__ , 'Minimization Complete, Final Coordinates: '+ str(obj.coords) +', Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
         
         return 0
 

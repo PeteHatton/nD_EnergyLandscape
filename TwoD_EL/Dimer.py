@@ -51,7 +51,7 @@ class Dimer:
         self.direction = None
         self.dimerForce_1 = None
         self.dimerForce_2 = None
-        self.transForce = [np.inf,np.inf]
+        self.transForce = [ np.inf for _ in range(self.params.Dimension) ]
         self.dimerForce_perp = None
         self.dimerForce_par = None
         self.dimerForce_perp_1=None
@@ -95,7 +95,7 @@ class Dimer:
         obj.energy = obj.surf.func_eval(obj.coords)
         self.minEnergy = copy.deepcopy(obj.energy)
         
-        if self.params.plotSurface:
+        if self.params.plotSurface and self.params.Dimension == 2:
             obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=1,marker='s',s=50,color='r')
 
         ut.log(__name__ , 'Walking the dimer',1)
@@ -103,7 +103,7 @@ class Dimer:
         #initialize step counter
         iter = 0
         
-        while np.max(np.abs(obj.force))>self.dimerTol and iter<self.maxIter: #and self.flag == 0
+        while np.max(np.abs(obj.force))>self.dimerTol and iter<self.maxIter: 
             
             #calc forces on dimer images
             self.calcForce(obj)
@@ -120,7 +120,8 @@ class Dimer:
             #Check if we've left the bounds of the surface.
             status = obj.surf.checkBounds(obj.coords)
             if status:
-                obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=1,color='r',s=20)
+                if self.params.plotSurface and self.params.Dimension == 2:
+                    obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy ,alpha=1,color='r',s=20)
 
                 ut.log(__name__, 'FAILED! OoB! Steps: '+ str(iter)
                                 +  '. E = ' + str(round(obj.energy,5))
@@ -160,7 +161,7 @@ class Dimer:
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
                             + '. Saddle point: ' + str(obj.coords)
                             ,1)
-            if self.params.plotSurface:
+            if self.params.plotSurface and self.params.Dimension==2:
                 obj.axis.scatter(obj.coords[0],obj.coords[1] ,obj.energy ,alpha=1,color='r',s=100,marker='*')
 
             return 0
@@ -175,7 +176,7 @@ class Dimer:
     def dirRand(self):
         
         #random vector
-        vecRand = np.random.uniform(low = -1.0, high = 1.0, size = (1,2))[0]
+        vecRand = np.random.uniform(low = -1.0, high = 1.0, size = (1,self.params.Dimension))[0]
         
         #normalize vector
         self.direction = vecRand / np.linalg.norm(vecRand)
@@ -214,7 +215,6 @@ class Dimer:
         
             mod_1 = self.globalDeflationOp(obj,self.dimerCoords_1)
             mod_2 = self.globalDeflationOp(obj,self.dimerCoords_2)
-            mod_R = self.globalDeflationOp(obj,obj.coords)
             
         elif self.params.useDeflation and self.params.useLocalDeflationOperator:
 
@@ -245,6 +245,9 @@ class Dimer:
         p = self.params.LocalDeflationOperator_power
     
         mod=1
+        '''
+        if either of those coords are in the range then we need to calculate b but if neither are then b=0. currently im doing something different
+        '''
         for i in range(len(obj.saddlePoints)):
             b = 1
             for j in range(self.params.Dimension):
@@ -363,7 +366,25 @@ class Dimer:
             
         
         return 0
-        
+
+def dimerCounts(obj,params):
+    tot_params = params.noDimers
+    success = len(obj.saddlePoints)
+    failed = tot_params - success
+
+    uniques = 0
+    for s_1 in obj.saddlePoints:
+        flag=0
+        for s_2 in obj.saddlePoints:
+            if s_2==s_1:
+                pass
+            elif np.all(np.abs(np.asarray([ elem for elem in s_2 ]) - np.asarray([ elem for elem in s_1 ])) < np.asarray([ params.uniqueSaddleCutoff for i in range(params.Dimension) ])):
+                flag = 1
+                break
+        if flag==0:
+            uniques+=1
+    
+    return tot_params,success,failed, uniques
         
 def main():
 
@@ -371,29 +392,35 @@ def main():
     
     #read Params
     dimerParams = ip.getParams()
-    
+
     lattice = lt.lattice(dimerParams)
     
     if dimerParams.plotSurface and dimerParams.Dimension == 2:
         lattice.axis = lattice.surf.surfPlot(lattice)
+
     lattice.initialCoords = copy.deepcopy(lattice.coords)
     
     for _ in range(dimerParams.noDimers):
-        lattice.force = [np.inf,np.inf]
+        lattice.force = [ np.inf for _ in range(dimerParams.Dimension) ]
         dimer = Dimer(dimerParams)
+
         status = dimer.run(lattice)
-        
-        if status:
-            pass
-        else:
+        if not status:
             lattice.saddlePoints.append(lattice.coords.tolist())
+
+    tot,success,failed, uniques = dimerCounts(lattice,dimerParams)
+
+    ut.log(__name__ , 'DIMER Results. Total: '+ str(tot) +'. Saddles: '+str(success)+'. Uniques: '+str(uniques)+'. Failed: '+str(failed),0)
             
     # show the generated plot
-    ut.log(__name__ , 'Plotting...',0)
-    plt.show()
-    
+    if dimerParams.plotSurface and dimerParams.Dimension:
+        ut.log(__name__ , 'Plotting...',0)
+        plt.show()
+
     ut.log(__name__ , 'Fin.',0)
-    
+
+
+
 if __name__ == '__main__':
     pass
 

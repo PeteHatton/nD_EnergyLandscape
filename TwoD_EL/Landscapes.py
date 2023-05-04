@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import copy
 from mpl_toolkits import mplot3d
-
+from scipy.misc import derivative
 
 class Surface:
 
@@ -13,13 +13,17 @@ class Surface:
     
     TO-DO:
         - Make generic for different dimensions depending on surface...
-        - option for fully 3d plotting or contour
         - Add support for plotting the effect of deflation
 
     '''
 
     def __init__(self,params):
         self.params = copy.deepcopy(params)
+
+    def checkDim(self):
+        if self.params.Dimension not in self.implementedDims:
+            return 1
+        return 0
         
     def checkBounds(self,coords):
         for i,_ in enumerate(coords):
@@ -30,11 +34,12 @@ class Surface:
     def func_prime_eval(self,coords):
 
         dif = 0.00001
-        x1 = [coords[0]-dif, coords[0], coords[0]+dif]
-        x2 = [coords[1]-dif, coords[1], coords[1]+dif]
-        
-        return -1*np.asarray([ (self.func_eval([x1[2],x2[1]]) - self.func_eval([x1[0],x2[1]])) / (2*dif), (self.func_eval([x1[1],x2[2]]) - self.func_eval([x1[1],x2[0]])) / (2*dif)])
-        
+
+        XH = [ [coords[j]+dif if i==j else coords[j] for j in range(self.params.Dimension) ] for i in range(self.params.Dimension) ]
+        XL = [ [coords[j]-dif if i==j else coords[j] for j in range(self.params.Dimension) ] for i in range(self.params.Dimension) ]
+
+        return -1*np.asarray([ (self.func_eval(XH[i]) - self.func_eval(XL[i])) / (2*dif) for i in range(self.params.Dimension) ])
+    
     def norm_func_prime_eval(self,coords):
         eval = self.func_prime_eval(coords)
         return eval/np.linalg.norm(eval)
@@ -63,43 +68,68 @@ class Styblinski_Tang(Surface):
 
     def __init__(self,params):
         self.params = copy.deepcopy(params)
+        self.implementedDims = None
+
         '''
         Suggested values for the Styblinski Tang surface [https://www.sfu.ca/~ssurjano/stybtang.html].
         
         '''
-        self.boundary = [[-5,5],[-5,5]]
+
+        self.boundary = [ [-5,5] for _ in range(self.params.Dimension)]
+        
+        #plotting params
         self.vmax = 100
         self.vmin = -100
         self.levels = 50
         self.plotPoints = 500
         
     def func_eval(self,coords):
-        [x1,x2] = coords
-        
-        return 0.5 * (( x1**4 - 16*x1**2 + 5*x1 ) + ( x2**4 - 16*x2**2 + 5*x2 ) )
+
+        res = 0
+
+        for D in range(self.params.Dimension):
+            x = coords[D]
+            res += ( x**4 - 16*x**2 + 5*x )
+
+        return 0.5 * res
         
 class Schwefel(Surface):
 
-    def __init__(self):
-    
-        self.boundary = [[-100,100],[-100,100]]
+    def __init__(self,params):
+        
+        self.params = copy.deepcopy(params)
+        
+        self.boundary = [[-100,100] for _ in range(self.params.Dimension)]
+
+        #plotting params
         self.vmax = 10
         self.vmin = -10
         self.levels = 10
         self.plotPoints = 100
         
     def func_eval(self,coords):
-        [x1,x2] = coords
-        return -418.9829*2 + x1*np.sin(np.sqrt(np.abs(x1))) + x2*np.sin(np.sqrt(np.abs(x2)))
+        
+        res = 0
+
+        for D in range(self.params.Dimension):
+            x = coords[D]
+            res += x*np.sin(np.sqrt(np.abs(x)))
+
+        return -418.9829*self.params.Dimension + res
+
 
 
 class Muller_Brown(Surface):
 
     def __init__(self):
+        
+        self.params = copy.deepcopy(params)
+
         '''
         Suggested values for the Muller Brown surface [https://www.wolframcloud.com/objects/demonstrations/TrajectoriesOnTheMullerBrownPotentialEnergySurface-source.nb].
         
         '''
+        self.implementedDims = [2]
         self.boundary = [[-2,1],[-0.5,2]]
         self.vmax = 100
         self.vmin = -100

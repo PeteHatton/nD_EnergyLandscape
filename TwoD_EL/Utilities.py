@@ -24,6 +24,8 @@ def convertStrToType(strValue, typeName):
             return int(strValue)
         elif typeName == 'float':
             return float(strValue)
+        elif typeName == 'list':
+            return [ float(coord) for coord in strValue.split(',') ] 
         else:
             sys.exit(__name__ + ": convertStrToType: ERROR: undefined type: " + typeName)
     except:
