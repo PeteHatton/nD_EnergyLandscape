@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np
-import TwoD_EL.Utilities as ut
+import nDEL.Utilities as ut
 
 class InputParams():
 

@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import copy
 import sys
 
-import TwoD_EL.Landscapes as ls
-import TwoD_EL.Utilities as ut
-import TwoD_EL.Lattice as lt
-import TwoD_EL.Input as ip
+import nDEL.Landscapes as ls
+import nDEL.Utilities as ut
+import nDEL.Lattice as lt
+import nDEL.Input as ip
 
 def getMinimizer(params):
     if params.minAlgorithm == 'Steepest Descent':
@@ -94,14 +94,12 @@ class Steepest_Descent_adaptive_step(Minimizer):
             
             #Check if we've left the bounds of the surface.
             status = obj.surf.checkBounds(obj.coords)
-            print(status)
             if status:
                 ut.log(__name__, 'FAILED! OoB! Steps: '+ str(iter)
                                 +  '. E = ' + str(round(obj.energy,5))
                                 + '. Final coords: ' + str(obj.coords)
                                 ,1)
                 return 1
-            
             
         # record number of steps we took
         obj.minIterations = iter

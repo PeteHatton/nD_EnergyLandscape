@@ -4,10 +4,10 @@ import copy
 import sys
 import math
 
-import TwoD_EL.Landscapes as ls
-import TwoD_EL.Utilities as ut
-import TwoD_EL.Lattice as lt
-import TwoD_EL.Input as ip
+import nDEL.Landscapes as ls
+import nDEL.Utilities as ut
+import nDEL.Lattice as lt
+import nDEL.Input as ip
 
 class saddleSearcher:
 

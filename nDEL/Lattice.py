@@ -3,9 +3,9 @@ import math
 import numpy as np
 import copy
 
-import TwoD_EL.Landscapes as ls
-import TwoD_EL.Minimize as mn
-import TwoD_EL.Utilities as ut
+import nDEL.Landscapes as ls
+import nDEL.Minimize as mn
+import nDEL.Utilities as ut
 
 class lattice:
 

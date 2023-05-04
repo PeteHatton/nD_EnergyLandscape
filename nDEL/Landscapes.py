@@ -3,6 +3,7 @@ import math
 import numpy as np
 import sys
 import copy
+
 from mpl_toolkits import mplot3d
 from scipy.misc import derivative
 
@@ -26,6 +27,10 @@ class Surface:
         return 0
         
     def checkBounds(self,coords):
+        
+        """
+            need to make this N dimensional
+        """
         for i,_ in enumerate(coords):
             if self.boundary[i][0] > coords[i] or self.boundary[i][1] < coords[i]:
                 return 1
@@ -98,7 +103,8 @@ class Schwefel(Surface):
     def __init__(self,params):
         
         self.params = copy.deepcopy(params)
-        
+        self.implementedDims = None
+
         self.boundary = [[-100,100] for _ in range(self.params.Dimension)]
 
         #plotting params
@@ -153,12 +159,13 @@ class Muller_Brown(Surface):
 class Egg_Holder(Surface):
 
     def __init__(self):
-    
+        self.params = copy.deepcopy(params)
+        
         '''
         Suggested values for the Egg Holder surface [https://www.sfu.ca/~ssurjano/egg.html].
         
         '''
-        
+        self.implementedDims = [2]
         self.boundary = [[-512,512],[-512,512]]
         self.vmax = 1000
         self.vmin = -1000
