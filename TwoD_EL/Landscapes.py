@@ -2,16 +2,24 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import sys
+import copy
+from mpl_toolkits import mplot3d
+
 
 class Surface:
 
     '''
     Generic surface object
     
+    TO-DO:
+        - Make generic for different dimensions depending on surface...
+        - option for fully 3d plotting or contour
+        - Add support for plotting the effect of deflation
+
     '''
 
-    def __init__(self):
-        pass
+    def __init__(self,params):
+        self.params = copy.deepcopy(params)
         
     def checkBounds(self,coords):
         for i,_ in enumerate(coords):
@@ -30,11 +38,31 @@ class Surface:
     def norm_func_prime_eval(self,coords):
         eval = self.func_prime_eval(coords)
         return eval/np.linalg.norm(eval)
+    
+    def surfPlot(self,obj):
+
+        """
+        initial plot of the energy surface on the region.
+        
+        """
+        ax = plt.axes(projection='3d')
+
+        # Make data.
+        xlist = np.linspace(obj.surf.boundary[0][0], obj.surf.boundary[0][1], obj.surf.plotPoints)
+        ylist = np.linspace(obj.surf.boundary[1][0], obj.surf.boundary[1][1], obj.surf.plotPoints)
+
+        X, Y = np.meshgrid(xlist, ylist)
+        Z = obj.surf.func_eval([X,Y])
+
+        # Plot the surface.
+        ax.contour3D(X, Y, Z,70,alpha=0.7)
+
+        return ax
 
 class Styblinski_Tang(Surface):
 
-    def __init__(self):
-    
+    def __init__(self,params):
+        self.params = copy.deepcopy(params)
         '''
         Suggested values for the Styblinski Tang surface [https://www.sfu.ca/~ssurjano/stybtang.html].
         
@@ -47,6 +75,7 @@ class Styblinski_Tang(Surface):
         
     def func_eval(self,coords):
         [x1,x2] = coords
+        
         return 0.5 * (( x1**4 - 16*x1**2 + 5*x1 ) + ( x2**4 - 16*x2**2 + 5*x2 ) )
         
 class Schwefel(Surface):
@@ -110,27 +139,7 @@ class Egg_Holder(Surface):
         [x1,x2] = coords
         return -(x2+47)*np.sin(np.sqrt(np.abs(x2+x1/2 + 47)))-x1*np.sin(np.sqrt(np.abs(x1-(x2+47))))
         
-def surfPlot(obj):
-    '''
-    initial plot of the energy surface on the region.
-    
-    '''
-    xlist = np.linspace(obj.surf.boundary[0][0], obj.surf.boundary[0][1], obj.surf.plotPoints)
-    ylist = np.linspace(obj.surf.boundary[1][0], obj.surf.boundary[1][1], obj.surf.plotPoints)
 
-    X, Y = np.meshgrid(xlist, ylist)
-    Z = obj.surf.func_eval([X,Y])
-    
-    fig,ax=plt.subplots(1,1)
-    
-    cp = ax.contourf(X, Y, Z,
-                    levels = obj.surf.levels,
-                    vmin = obj.surf.vmin ,
-                    vmax = obj.surf.vmax)
-                    
-    fig.colorbar(cp)
-
-    return ax
     
 if __name__ == '__main__':
     pass

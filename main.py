@@ -8,6 +8,7 @@ import sys
 import importlib
 import textwrap
 
+
 availableCommands = {
     "Minimize": "Minimize",
     "Dimer": "Dimer",

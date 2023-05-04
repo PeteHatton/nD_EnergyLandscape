@@ -10,7 +10,7 @@ import TwoD_EL.Utilities as ut
 class lattice:
 
     def __init__(self,params):
-    
+        self.params = copy.deepcopy(params)
         #Surface initialization
         self.coords = copy.deepcopy(params.initialCoords)
         
@@ -22,24 +22,24 @@ class lattice:
         self.force = [np.inf,np.inf]
         self.normF = None
         
-        self.surf = getSurface(params.Surface)
+        self.surf = getSurface(params.Surface,self.params)
 
         self.saddlePoints = []
 
     
-def getSurface(dat):
+def getSurface(dat,params):
 
     if dat == 'Muller Brown':
-        surface = ls.Muller_Brown()
+        surface = ls.Muller_Brown(params)
 
     elif dat == 'Styblinski Tang':
-        surface = ls.Styblinski_Tang()
+        surface = ls.Styblinski_Tang(params)
 
     elif dat == 'Egg Holder':
-        surface = ls.Egg_Holder()
+        surface = ls.Egg_Holder(params)
         
     elif dat == 'Schwefel':
-        surface = ls.Schwefel()
+        surface = ls.Schwefel(params)
 
     return surface
     
