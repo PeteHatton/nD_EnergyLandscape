@@ -108,7 +108,7 @@ class Steepest_Descent_adaptive_step(Minimizer):
         if self.params.Dimension==2:
             obj.axis.scatter(obj.coords[0],obj.coords[1],obj.energy, color = 'r' , marker='*',s=50)
         
-        ut.log(__name__ , 'Minimization Complete, Final Coordinates: '+ str(obj.coords) +', Energy: ' +str(round(obj.energy,5))+ ', Max. Force: '+str(round(np.max(np.abs(obj.force)),5)),1)
+        ut.log(__name__ , 'Minimization Complete, Final Coordinates: '+ str(obj.coords) +', E: ' +str(round(obj.energy,5))+ ', Max(F): '+str(round(np.max(np.abs(obj.force)),5)),1)
         
         return 0
 
@@ -120,20 +120,23 @@ def main():
     #Set-up configuration
     lattice = lt.lattice(minParams)
     
+    #initialize
     ut.log(__name__, 'Initializing Minimizer')
     min = getMinimizer(minParams)
     
+    #plot if we can/want
     if minParams.plotSurface and minParams.Dimension == 2:
         lattice.axis = lattice.surf.surfPlot(lattice)
     
+    #run minimization, quit if we fail.
     ut.log(__name__, 'Running '+ minParams.minAlgorithm +' Minimization',1)
     if min.run(lattice):
         sys.exit()
-    
-    ut.log(__name__ , 'Plotting...',0)
         
-    # show the generated plot
-    plt.show()
+    # show the generated plot if we can/want
+    ut.log(__name__ , 'Plotting...',0)
+    if minParams.plotSurface and minParams.Dimension == 2:
+        plt.show()
     
     ut.log(__name__ , 'Fin.',0)
     

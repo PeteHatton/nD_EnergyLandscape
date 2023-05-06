@@ -10,8 +10,6 @@ class InputParams():
         self.InputFile = ''
         
         #Main
-        # self.initialxCoord = 0.0
-        # self.initialyCoord = 0.0
         self.initialCoords = [0.0,0.0]
         self.Surface = ''
         self.Dimension = 0

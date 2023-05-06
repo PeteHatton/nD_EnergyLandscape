@@ -13,7 +13,6 @@ class Surface:
     Generic surface object
     
     TO-DO:
-        - Make generic for different dimensions depending on surface...
         - Add support for plotting the effect of deflation
 
     '''
@@ -21,18 +20,21 @@ class Surface:
     def __init__(self,params):
         self.params = copy.deepcopy(params)
 
-    def checkDim(self):
-        if self.params.Dimension not in self.implementedDims:
-            return 1
-        return 0
+    def checkDimCompat(self,dim,dimRange):
+        
+        if dim != dimRange and dimRange != None:
+            print('ERROR: Requested dimension of '+str(dim[0])+' is not possible on the '+self.params.Surface+' surface. Please choose a dimension in the range: '+str(dimRange))
+            sys.exit()
         
     def checkBounds(self,coords):
-        
         """
             need to make this N dimensional
         """
-        for i,_ in enumerate(coords):
-            if self.boundary[i][0] > coords[i] or self.boundary[i][1] < coords[i]:
+        flag = 0
+        for i,coord in enumerate(coords):
+            if coord < self.boundary[i][0] or coord >self.boundary[i][1]:
+                flag = 1
+        if flag == 1:
                 return 1
         return 0
     
@@ -74,6 +76,8 @@ class Styblinski_Tang(Surface):
     def __init__(self,params):
         self.params = copy.deepcopy(params)
         self.implementedDims = None
+        
+        self.checkDimCompat([self.params.Dimension],self.implementedDims)
 
         '''
         Suggested values for the Styblinski Tang surface [https://www.sfu.ca/~ssurjano/stybtang.html].
@@ -105,8 +109,10 @@ class Schwefel(Surface):
         self.params = copy.deepcopy(params)
         self.implementedDims = None
 
-        self.boundary = [[-100,100] for _ in range(self.params.Dimension)]
+        self.checkDimCompat([self.params.Dimension],self.implementedDims)
 
+        self.boundary = [[-100,100] for _ in range(self.params.Dimension)]
+        
         #plotting params
         self.vmax = 10
         self.vmin = -10
@@ -127,15 +133,18 @@ class Schwefel(Surface):
 
 class Muller_Brown(Surface):
 
-    def __init__(self):
+    def __init__(self,params):
         
         self.params = copy.deepcopy(params)
+        
+        
 
         '''
         Suggested values for the Muller Brown surface [https://www.wolframcloud.com/objects/demonstrations/TrajectoriesOnTheMullerBrownPotentialEnergySurface-source.nb].
         
         '''
         self.implementedDims = [2]
+        self.checkDimCompat([self.params.Dimension],self.implementedDims)
         self.boundary = [[-2,1],[-0.5,2]]
         self.vmax = 100
         self.vmin = -100
@@ -143,6 +152,7 @@ class Muller_Brown(Surface):
         self.plotPoints = 400
         
     def func_eval(self,coords):
+
         [x1,x2] = coords
         A = (-200,-100,-170,15)
         xo = (1,0,-0.5,-1)
@@ -160,12 +170,15 @@ class Egg_Holder(Surface):
 
     def __init__(self):
         self.params = copy.deepcopy(params)
-        
+
         '''
         Suggested values for the Egg Holder surface [https://www.sfu.ca/~ssurjano/egg.html].
         
         '''
         self.implementedDims = [2]
+        
+        self.checkDimCompat([self.params.Dimension],self.implementedDims)
+
         self.boundary = [[-512,512],[-512,512]]
         self.vmax = 1000
         self.vmin = -1000

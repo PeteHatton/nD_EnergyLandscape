@@ -38,8 +38,8 @@ def usage():
                 availCmdString += "%s\n                      " % cmd
     
     usageString = """
-                  Usage: main.py NAME_OF_MODULE [OPTIONS] [ARGUMENTS]
-                       : main.py NAME_OF_MODULE -h will print help"
+                  Usage: NDEL.py NAME_OF_MODULE
+                       : NDEL.py NAME_OF_MODULE -h will print help"
                   
                   NAME_OF_MODULE must be one of:
                       
@@ -87,10 +87,6 @@ def checkRequirements():
 def main():
     checkRequirements()
     
-    if len(sys.argv) == 2 and (sys.argv[1] == "-v" or sys.argv[1] == "--version"):
-        print("LKMC %s" % LKMC.__version__)
-        sys.exit(0)
-    
     if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] not in availableCommands.keys():
         sys.exit(usage())
     
@@ -100,7 +96,7 @@ def main():
     
     if sys.argv[1] != "Client":
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        print('~~~~~~~~~~~~~~~~~~~~~~ 2D - Energy Landscape ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print('~~~~~~~~~~~~~~~~~~~~~~~~ 2D - Energy Landscape ~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         
     
@@ -110,7 +106,7 @@ def main():
     sys.argv[0] += " %s" % modname
     
     if modname != "Client":
-        ut.log("2D_EL", "Running: %s" % modname, 0)
+        ut.log("nDEL", "Running: %s" % modname, 0)
     
     if hasattr(_module, "main"):
         status = _module.main()

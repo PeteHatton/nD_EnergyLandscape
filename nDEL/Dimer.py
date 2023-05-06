@@ -81,7 +81,7 @@ class Dimer:
     def run(self,obj):
 
         #setup and plot
-        ut.log(__name__ , 'Initializing Dimer',1)
+        ut.log(__name__ , 'Initializing Dimer ' + str(obj.dimerCount),1)
         self.initializeDimer(obj)
         
         # #plot the initial dimer
@@ -111,7 +111,6 @@ class Dimer:
             #calc forces for rotation and rotate dimer
             self.calcForceRot(obj)
             self.minDimer_rot(obj)
-                
             
             #calc forces for translation and translate
             self.calcForceTrans(obj)
@@ -129,7 +128,8 @@ class Dimer:
                                 + '. Final coords: ' + str(obj.coords)
                                 ,1)
                 return 1
-                
+            
+            
             self.calcStepSize(obj)
             
             #calc new energy
@@ -171,6 +171,8 @@ class Dimer:
                             + ', Rel. En.: ' + str(round(obj.energy - self.minEnergy,5))
                             + '. Final coords: ' + str(obj.coords)
                             ,1)
+            if self.params.plotSurface and self.params.Dimension==2:
+                obj.axis.scatter(obj.coords[0],obj.coords[1] ,obj.energy ,alpha=1,color='b',s=100,marker='.')
             return 1
 
     def dirRand(self):
@@ -181,7 +183,7 @@ class Dimer:
         #normalize vector
         self.direction = vecRand / np.linalg.norm(vecRand)
         
-        ut.log(__name__, 'Dimer initialized with direction: ' + str(self.direction) ,2)
+        ut.log(__name__, 'Dimer initialized',2)# with direction: ' + str(self.direction) ,2)
         
         return 0
         
@@ -233,9 +235,11 @@ class Dimer:
     def globalDeflationOp(self,obj,coords):
         
         mod=1
-        for i in range(len(obj.saddlePoints)):
-            mod *= 1/(coords - obj.saddlePoints[i])**4 + 1
-
+        if len(obj.saddlePoints)>0:
+            for i in range(len(obj.saddlePoints)):
+                mod *= 1/np.linalg.norm(coords - obj.saddlePoints[i])**1
+            mod += +1
+        
         return mod
         
     def localDeflationOp(self,obj,coords):
@@ -245,18 +249,15 @@ class Dimer:
         p = self.params.LocalDeflationOperator_power
     
         mod=1
-        '''
-        if either of those coords are in the range then we need to calculate b but if neither are then b=0. currently im doing something different
-        '''
-        for i in range(len(obj.saddlePoints)):
-            b = 1
-            for j in range(self.params.Dimension):
-                if coords[j] < obj.saddlePoints[i][j] + r and coords[j] > obj.saddlePoints[i][j] - r:
-                    b *= np.exp( -alpha / ( r**p - ( coords[j] - obj.saddlePoints[i][j])**p )) / np.exp( -alpha / ( r**p ) )
-                else:
-                    b *= 0
-            
-            mod *= 1/(1 - b)
+        if len(obj.saddlePoints)>0:
+            for i in range(len(obj.saddlePoints)):
+                b = 1
+                for j in range(self.params.Dimension):
+                    if coords[j] < obj.saddlePoints[i][j] + r and coords[j] > obj.saddlePoints[i][j] - r:
+                        b *= np.exp( -alpha / ( r**p - ( coords[j] - obj.saddlePoints[i][j])**p )) / np.exp( -alpha / ( r**p ) )
+                    else:
+                        b *= 0
+                mod *= 1/(1-b)
         
         return mod
         
@@ -368,23 +369,25 @@ class Dimer:
         return 0
 
 def dimerCounts(obj,params):
+
     tot_params = params.noDimers
     success = len(obj.saddlePoints)
     failed = tot_params - success
+    uniqueSaddles = []
 
-    uniques = 0
-    for s_1 in obj.saddlePoints:
+    for s1,sad_1 in enumerate(obj.saddlePoints):
         flag=0
-        for s_2 in obj.saddlePoints:
-            if s_2==s_1:
-                pass
-            elif np.all(np.abs(np.asarray([ elem for elem in s_2 ]) - np.asarray([ elem for elem in s_1 ])) < np.asarray([ params.uniqueSaddleCutoff for i in range(params.Dimension) ])):
-                flag = 1
-                break
-        if flag==0:
-            uniques+=1
-    
-    return tot_params,success,failed, uniques
+        if s1 == 0:
+            uniqueSaddles.append(sad_1)
+        else:
+            for s2,sad_2 in enumerate(uniqueSaddles):
+                if np.all(np.abs(np.asarray(sad_2) - np.asarray(sad_1)) < np.asarray([ params.uniqueSaddleCutoff for i in range(params.Dimension) ])):
+                    flag = 1
+                    break
+            if flag==0:
+                uniqueSaddles.append(sad_1)
+
+    return tot_params,success,failed, len(uniqueSaddles)
         
 def main():
 
@@ -393,33 +396,38 @@ def main():
     #read Params
     dimerParams = ip.getParams()
 
+    #set up 'lattice'
     lattice = lt.lattice(dimerParams)
-    
+    lattice.initialCoords = copy.deepcopy(lattice.coords)
+
+    #plot if we want to and can do
     if dimerParams.plotSurface and dimerParams.Dimension == 2:
         lattice.axis = lattice.surf.surfPlot(lattice)
-
-    lattice.initialCoords = copy.deepcopy(lattice.coords)
     
+    #run the dimers
     for _ in range(dimerParams.noDimers):
+        lattice.dimerCount += 1
+        
+        #reset the forces on the dimer
         lattice.force = [ np.inf for _ in range(dimerParams.Dimension) ]
+        #set up a new dimer
         dimer = Dimer(dimerParams)
-
+        #run the dimer
         status = dimer.run(lattice)
         if not status:
+            #if we converged then add that to the list of saddle points
             lattice.saddlePoints.append(lattice.coords.tolist())
 
+    #count the results of the dimer runs and print them
     tot,success,failed, uniques = dimerCounts(lattice,dimerParams)
-
     ut.log(__name__ , 'DIMER Results. Total: '+ str(tot) +'. Saddles: '+str(success)+'. Uniques: '+str(uniques)+'. Failed: '+str(failed),0)
-            
-    # show the generated plot
+
+    # show the generated plot if we can/want
     if dimerParams.plotSurface and dimerParams.Dimension:
         ut.log(__name__ , 'Plotting...',0)
         plt.show()
 
     ut.log(__name__ , 'Fin.',0)
-
-
 
 if __name__ == '__main__':
     pass
